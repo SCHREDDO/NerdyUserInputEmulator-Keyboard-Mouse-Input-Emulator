@@ -19,14 +19,55 @@
 //
 // Created By: Sebastian Lühnen
 // Created On: 30.06.2018
-// Last Edited On: 30.06.2018
+// Last Edited On: 13.07.2018
 // Language: C#
 //
 using System;
+using System.Runtime.InteropServices;
+
+using SCHREDDO.Nerdy.UserInput.Emulator.Enums;
+using SCHREDDO.Nerdy.UserInput.Emulator.Structs;
 
 namespace SCHREDDO.Nerdy.UserInput.Emulator
 {
-    public class NerdyUserInputEmulator
+    public static class NerdyUserInputEmulator
     {
+        public static void SendKeyboardInput(KeyName key)
+        {
+            Input[] inputs = { BuildKeyInput(key) };
+
+            SendInput(1, inputs, Input.Size);
+        }
+
+        public static void SendKeyboardInput(KeyName[] keys)
+        {
+            Input[] inputs = new Input[keys.Length];
+
+            for (int i = 0; i < keys.Length; i++)
+            {
+                inputs[i] = BuildKeyInput(keys[i]);
+            }
+
+            SendInput((uint)inputs.Length, inputs, Input.Size);
+        }
+
+        private static Input BuildKeyInput(KeyName key)
+        {
+            Input input = new Input();
+
+            input.type = 1;
+            input.inputUnion.keyInput.scanCodeShort = GetScanCodeShort(key);
+            input.inputUnion.keyInput.keyEventFLag = KeyEventFlag.SCANCODE;
+
+            return input;
+        }
+
+        private static ScanCodeShort GetScanCodeShort(KeyName key)
+        {
+            return (ScanCodeShort)System.Enum.Parse(typeof(ScanCodeShort), "SCS_" + key);
+        }
+
+        [DllImport("user32.dll")]
+        internal static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] Input[] pInputs, int cbSize);
     }
 }
